@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Weight Log">
+  <meta name="theme-color" content="#0a0a0a">
+  <title>Weight Log</title>
+  <link rel="stylesheet" href="./shared.css">
+  <style>
+    .wt-exercise {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      padding: 14px 0;
+      border-bottom: 1px solid var(--border);
+    }
+    .wt-exercise:last-child { border-bottom: none; }
+    .wt-ex-left { flex: 1; min-width: 0; }
+    .wt-ex-name { font-size: 16px; font-weight: 600; }
+    .wt-ex-meta { font-size: 12px; color: var(--text-tertiary); margin-top: 2px; }
+    .wt-update-wrap { display: flex; align-items: center; gap: 8px; margin-top: 10px; }
+    .wt-num-input {
+      width: 80px;
+      padding: 8px;
+      border-radius: 8px;
+      border: 1px solid var(--border);
+      font-size: 15px;
+      background: var(--surface-muted);
+      color: var(--text-primary);
+      text-align: center;
+      font-family: inherit;
+      font-weight: 600;
+    }
+    .wt-num-input:focus { outline: none; border-color: var(--text-primary); }
+    .wt-unit { font-size: 13px; color: var(--text-secondary); font-weight: 500; }
+    .wt-ex-right { text-align: right; padding-left: 12px; }
+    .wt-weight { font-size: 28px; font-weight: 700; font-variant-numeric: tabular-nums; line-height: 1; }
+    .wt-weight-empty { font-size: 22px; color: var(--text-tertiary); }
+    .wt-empty { text-align: center; padding: 32px 0; color: var(--text-tertiary); font-size: 14px; }
+  </style>
+<base target="_blank">
+</head>
+<body>
+
+  <div class="app-header">
+        <div> 
+      <a class="small-btn" href="index.html">Back<a>
+    </div>
+    </br>
+    <div class="title">Weight log</div>
+  </div>
+  <div class="app-sub">Add exercises you actually do. Update weights as you progress.</div>
+
+  <div class="card">
+    <div class="section-title">Add exercise</div>
+    <input class="input" id="exName" placeholder="Exercise name (e.g. Overhead press)" onkeydown="if(event.key==='Enter')addExercise()">
+    <button class="btn btn-primary" onclick="addExercise()">Add to log</button>
+  </div>
+
+  <div class="card">
+    <div class="section-title">Your exercises</div>
+    <div id="exerciseList"></div>
+  </div>
+
+  <div class="card">
+    <div class="section-title">Backup</div>
+    <div style="font-size:12px;color:var(--text-secondary);margin-bottom:8px;">
+      Tap <b>Copy</b> to fill the box below. Then select-all and paste into Notes.
+      To restore, paste your backup into the box and tap <b>Load</b>.
+    </div>
+    <div class="backup-row">
+      <button class="backup-btn" onclick="copyBackup()">Copy to box</button>
+      <button class="backup-btn" onclick="loadBackup()">Load from box</button>
+    </div>
+    <textarea class="backup-area" id="backupBox" placeholder="Backup code appears here..."></textarea>
+  </div>
+
+  <div class="toast" id="wtToast">Saved</div>
+
+  <script>
+    const WT_DB_KEY = 'weightTracker_v1';
+    let wtState = { exercises: [] };
+
+    function wtSave() {
+      try { localStorage.setItem(WT_DB_KEY, JSON.stringify(wtState)); } catch(e) {}
+    }
+
+    function wtLoad() {
+      try {
+        const s = localStorage.getItem(WT_DB_KEY);
+        if (s) wtState = JSON.parse(s);
+      } catch(e) {}
+    }
+
+    function wtToast(msg) {
+      const t = document.getElementById('wtToast');
+      t.textContent = msg;
+      t.classList.add('show');
+      setTimeout(() => t.classList.remove('show'), 1200);
+    }
+
+    function addExercise() {
+      const input = document.getElementById('exName');
+      const name = input.value.trim();
+      if (!name) return;
+      if (wtState.exercises.find(e => e.name.toLowerCase() === name.toLowerCase())) {
+        wtToast('Already exists');
+        return;
+      }
+      wtState.exercises.push({ name, weight: 0, date: '-' });
+      input.value = '';
+      wtRender();
+      wtToast('Added ' + name);
+    }
+
+    function updateWeight(idx) {
+      const input = document.getElementById('wt-input-' + idx);
+      const val = parseFloat(input.value);
+      if (isNaN(val) || val < 0) return;
+      wtState.exercises[idx].weight = val;
+      wtState.exercises[idx].date = new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+      wtRender();
+      wtToast('Updated');
+    }
+
+    function deleteExercise(idx) {
+      if (!confirm('Delete "' + wtState.exercises[idx].name + '"?')) return;
+      wtState.exercises.splice(idx, 1);
+      wtRender();
+    }
+
+    function wtRender() {
+      const list = document.getElementById('exerciseList');
+      if (wtState.exercises.length === 0) {
+        list.innerHTML = '<div class="wt-empty">No exercises yet.<br>Add one above.</div>';
+      } else {
+        let html = '';
+        wtState.exercises.forEach((ex, i) => {
+          const hasWeight = ex.weight > 0;
+          html += `
+            <div class="wt-exercise">
+              <div class="wt-ex-left">
+                <div class="wt-ex-name">${ex.name}</div>
+                <div class="wt-ex-meta">${hasWeight ? 'Last: ' + ex.date : 'Not logged yet'}</div>
+                <div class="wt-update-wrap">
+                  <input class="wt-num-input" id="wt-input-${i}" type="number" step="0.5" placeholder="0" onkeydown="if(event.key==='Enter')updateWeight(${i})">
+                  <span class="wt-unit">kg</span>
+                  <button class="small-btn" onclick="updateWeight(${i})">Update</button>
+                  <button class="small-btn danger" onclick="deleteExercise(${i})">Delete</button>
+                </div>
+              </div>
+              <div class="wt-ex-right">
+                <div class="${hasWeight ? 'wt-weight' : 'wt-weight wt-weight-empty'}">${hasWeight ? ex.weight : '—'}</div>
+                ${hasWeight ? '<div class="wt-unit">kg</div>' : ''}
+              </div>
+            </div>
+          `;
+        });
+        list.innerHTML = html;
+      }
+      wtSave();
+    }
+
+    function copyBackup() {
+      const payload = JSON.stringify(wtState);
+      const box = document.getElementById('backupBox');
+      box.value = payload;
+      box.select();
+      try {
+        navigator.clipboard.writeText(payload).then(() => {
+          wtToast('Copied to clipboard');
+        }).catch(() => {
+          wtToast('Code in box — copy manually');
+        });
+      } catch(e) {
+        wtToast('Code in box — copy manually');
+      }
+    }
+
+    function loadBackup() {
+      const raw = document.getElementById('backupBox').value.trim();
+      if (!raw) return;
+      try {
+        const parsed = JSON.parse(raw);
+        if (parsed.exercises && Array.isArray(parsed.exercises)) {
+          wtState = parsed;
+          wtRender();
+          wtToast('Restored');
+        } else {
+          alert('Invalid backup');
+        }
+      } catch(e) { alert('Invalid backup'); }
+    }
+
+    wtLoad();
+    wtRender();
+  </script>
+</body>
+</html>

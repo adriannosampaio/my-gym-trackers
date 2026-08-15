@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Trackers">
+  <meta name="theme-color" content="#0a0a0a">
+  <title>Trackers</title>
+  <link rel="stylesheet" href="./shared.css">
+  <style>
+    .idx-card {
+      display: block;
+      text-decoration: none;
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 16px;
+      margin-bottom: 16px;
+      background: var(--bg);
+      color: var(--text-primary);
+      transition: all 0.15s ease-out;
+      cursor: pointer;
+      touch-action: manipulation;
+    }
+    .idx-card:active { transform: scale(0.98); border-color: var(--text-primary); }
+    .idx-card-title {
+      font-size: 16px;
+      font-weight: 600;
+      margin-bottom: 6px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+    .idx-card-arrow { font-size: 18px; color: var(--text-tertiary); font-weight: 400; }
+    .idx-card-desc { font-size: 14px; color: var(--text-secondary); line-height: 1.4; }
+    .idx-footer { margin-top: 24px; text-align: center; font-size: 12px; color: var(--text-tertiary); }
+  </style>
+<base target="_blank">
+</head>
+<body>
+
+  <div class="app-header">Trackers</div>
+  <div class="app-sub">Tap a tracker to open it. Add this page to your home screen for quick access.</div>
+
+  <a class="idx-card" href="./focus-tracker.html">
+    <div class="idx-card-title">
+      <span>Weekly Focus Checklist</span>
+      <span class="idx-card-arrow">›</span>
+    </div>
+    <div class="idx-card-desc">Log sets per muscle group, track maintenance volume, and view exercise references.</div>
+  </a>
+
+  <a class="idx-card" href="./weight-log.html">
+    <div class="idx-card-title">
+      <span>Weight Log</span>
+      <span class="idx-card-arrow">›</span>
+    </div>
+    <div class="idx-card-desc">Add your own exercises and record the last weight used for each.</div>
+  </a>
+
+  <div class="idx-footer">
+    To add more trackers, upload new HTML files and add a card above.
+  </div>
+
+</body>
+</html>

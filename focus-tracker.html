@@ -1,0 +1,483 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <meta name="apple-mobile-web-app-title" content="Focus Tracker">
+  <meta name="theme-color" content="#0a0a0a">
+  <title>Focus Tracker</title>
+  <link rel="stylesheet" href="./shared.css">
+  <style>
+    .wk-select { margin-bottom: 12px; }
+    .wk-subgroup { margin-bottom: 16px; }
+    .wk-subgroup:last-child { margin-bottom: 0; }
+    .wk-subtitle {
+      font-size: 13px;
+      font-weight: 600;
+      margin-bottom: 8px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .wk-progress {
+      width: 80px;
+      height: 4px;
+      background: var(--surface-muted);
+      border-radius: 2px;
+      overflow: hidden;
+      border: 1px solid var(--border);
+    }
+    .wk-progress-fill {
+      height: 100%;
+      border-radius: 2px;
+      transition: width 0.2s ease-out;
+    }
+    .wk-ex-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 10px 0;
+      border-bottom: 1px solid var(--border);
+    }
+    .wk-ex-row:last-child { border-bottom: none; }
+    .wk-ex-name { font-size: 15px; font-weight: 500; }
+    .wk-ex-meta { font-size: 12px; color: var(--text-tertiary); margin-top: 2px; }
+    .wk-counter { display: flex; align-items: center; gap: 10px; }
+    .wk-counter-btn {
+      width: 32px;
+      height: 32px;
+      border-radius: 10px;
+      border: 1px solid var(--border);
+      background: var(--surface-muted);
+      font-size: 18px;
+      color: var(--text-primary);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 600;
+      touch-action: manipulation;
+    }
+    .wk-counter-btn:active { transform: scale(0.92); }
+    .wk-counter-val {
+      font-size: 16px;
+      font-weight: 700;
+      min-width: 24px;
+      text-align: center;
+      font-variant-numeric: tabular-nums;
+    }
+    .wk-check {
+      width: 22px;
+      height: 22px;
+      border-radius: 6px;
+      border: 2px solid var(--border);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-right: 12px;
+      transition: all 0.15s ease-out;
+      flex-shrink: 0;
+    }
+    .wk-check.done {
+      background: var(--positive);
+      border-color: var(--positive);
+    }
+    .wk-check.done::after {
+      content: '✓';
+      color: #fff;
+      font-size: 13px;
+      font-weight: 700;
+    }
+    .wk-row-left { display: flex; align-items: center; flex: 1; min-width: 0; }
+    .wk-maint-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 10px 0;
+      border-bottom: 1px solid var(--border);
+      transition: all 0.15s ease-out;
+    }
+    .wk-maint-row:last-child { border-bottom: none; }
+    .wk-maint-row.done {
+      background: rgba(74, 222, 128, 0.06);
+      margin: 0 -16px;
+      padding-left: 16px;
+      padding-right: 16px;
+      border-radius: 8px;
+      border-bottom: none;
+    }
+    .wk-maint-name { font-size: 15px; font-weight: 500; }
+    .wk-maint-name.done {
+      text-decoration: line-through;
+      color: var(--text-tertiary);
+    }
+    .wk-summary-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 6px 0;
+    }
+    .wk-summary-name { font-size: 13px; color: var(--text-secondary); }
+    .wk-summary-val { font-size: 13px; font-weight: 700; }
+    .wk-total-bar {
+      height: 8px;
+      background: var(--surface-muted);
+      border-radius: 4px;
+      overflow: hidden;
+      margin-top: 6px;
+      border: 1px solid var(--border);
+    }
+    .wk-total-fill {
+      height: 100%;
+      border-radius: 4px;
+      transition: width 0.25s ease-out;
+    }
+    .wk-reset {
+      font-size: 13px;
+      color: var(--text-tertiary);
+      cursor: pointer;
+      text-decoration: underline;
+      margin-top: 12px;
+      display: inline-block;
+      font-weight: 500;
+    }
+    .wk-reset:active { color: var(--text-primary); }
+
+    /* Muscle guide */
+    .mg-list { display: flex; flex-direction: column; gap: 6px; }
+    .mg-item {
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      overflow: hidden;
+      transition: border-color 0.15s ease-out;
+    }
+    .mg-item:active { border-color: var(--text-primary); }
+    .mg-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 12px;
+      cursor: pointer;
+      user-select: none;
+      touch-action: manipulation;
+    }
+    .mg-name { font-size: 15px; font-weight: 600; }
+    .mg-arrow {
+      font-size: 12px;
+      color: var(--text-tertiary);
+      transition: transform 0.2s ease-out;
+      display: inline-block;
+    }
+    .mg-item.open .mg-arrow { transform: rotate(90deg); }
+    .mg-body {
+      max-height: 0;
+      overflow: hidden;
+      transition: max-height 0.3s ease-out;
+    }
+    .mg-item.open .mg-body { max-height: 800px; }
+    .mg-content { padding: 0 12px 12px; }
+    .mg-sub { margin-bottom: 10px; }
+    .mg-sub:last-child { margin-bottom: 0; }
+    .mg-sub-name { font-size: 13px; font-weight: 600; margin-bottom: 3px; }
+    .mg-sub-ex { font-size: 12px; color: var(--text-secondary); line-height: 1.5; }
+    .mg-tag {
+      display: inline-block;
+      padding: 2px 7px;
+      border-radius: 4px;
+      font-size: 11px;
+      margin-right: 4px;
+      margin-bottom: 3px;
+      background: var(--surface-muted);
+      color: var(--text-secondary);
+      border: 1px solid var(--border);
+    }
+  </style>
+<base target="_blank">
+</head>
+<body>
+
+  <div class="app-header">
+    <div> 
+      <a class="small-btn" href="index.html">Back<a>
+    </div>
+    </br>
+    <div class="title">Weekly checklist</div>
+  </div>
+  <div class="app-sub">Pick your focus. Log sets. Check them off. Tap a muscle below for exercise ideas.</div>
+
+  <div class="card">
+    <div class="section-title">This week's focus</div>
+    <select class="input wk-select" id="focusSelect" onchange="changeFocus()">
+      <option value="Shoulders">Shoulders</option>
+      <option value="Chest">Chest</option>
+      <option value="Back">Back</option>
+      <option value="Arms">Arms</option>
+      <option value="Legs">Legs</option>
+    </select>
+    <div id="focusSummary"></div>
+  </div>
+
+  <div class="card" id="focusCard">
+    <div class="section-title">Focus exercises <span class="badge badge-low" id="focusStatus">In progress</span></div>
+    <div id="focusExercises"></div>
+  </div>
+
+  <div class="card">
+    <div class="section-title">Maintenance (4 sets each)</div>
+    <div id="maintenanceExercises"></div>
+  </div>
+
+  <div class="card">
+    <div class="section-title">Weekly totals</div>
+    <div id="weeklySummary"></div>
+    <div class="wk-total-bar"><div class="wk-total-fill" id="totalBar"></div></div>
+    <span class="wk-reset" onclick="resetWeek()">Reset week</span>
+  </div>
+
+  <div class="card">
+    <div class="section-title">Muscle guide — tap to expand</div>
+    <div class="mg-list" id="muscleGuide"></div>
+  </div>
+
+  <script>
+    const exerciseData = {
+      'Shoulders': {
+        target: 28,
+        parts: [
+          { name: 'Front delt', target: 8, exercises: ['Overhead press','Arnold press','Front raise'] },
+          { name: 'Side delt', target: 12, exercises: ['Lateral raise','Upright row','Push press'] },
+          { name: 'Rear delt', target: 8, exercises: ['Face pull','Reverse flye','Band pull-apart'] }
+        ]
+      },
+      'Chest': {
+        target: 28,
+        parts: [
+          { name: 'Upper pec', target: 10, exercises: ['Incline bench press','Incline dumbbell press','Incline flye'] },
+          { name: 'Mid pec', target: 10, exercises: ['Flat bench press','Dip (lean forward)','Flat flye'] },
+          { name: 'Lower pec', target: 8, exercises: ['Decline press','Dip (upright)'] }
+        ]
+      },
+      'Back': {
+        target: 28,
+        parts: [
+          { name: 'Lats', target: 10, exercises: ['Pull-up','Lat pulldown','Straight-arm pulldown'] },
+          { name: 'Traps & rhomboids', target: 10, exercises: ['Chest-supported row','Face pull','Shrug'] },
+          { name: 'Erectors', target: 8, exercises: ['Deadlift','Romanian deadlift','Back extension'] }
+        ]
+      },
+      'Arms': {
+        target: 32,
+        parts: [
+          { name: 'Biceps', target: 16, exercises: ['Barbell curl','Incline dumbbell curl','Preacher curl','Hammer curl'] },
+          { name: 'Triceps', target: 16, exercises: ['Close-grip bench','Overhead extension','Cable pushdown','Skullcrusher'] }
+        ]
+      },
+      'Legs': {
+        target: 30,
+        parts: [
+          { name: 'Quads', target: 12, exercises: ['Squat','Leg press','Leg extension'] },
+          { name: 'Hamstrings', target: 10, exercises: ['Romanian deadlift','Leg curl','Nordic curl'] },
+          { name: 'Glutes', target: 8, exercises: ['Hip thrust','Bulgarian split squat'] }
+        ]
+      }
+    };
+
+    const maintenanceMap = {
+      'Shoulders': ['Bench press (chest)','Pull-up (back)','Squat (legs)','Barbell curl (arms)'],
+      'Chest': ['Overhead press (shoulders)','Pull-up (back)','Squat (legs)','Barbell curl (arms)'],
+      'Back': ['Bench press (chest)','Overhead press (shoulders)','Squat (legs)','Close-grip bench (arms)'],
+      'Arms': ['Bench press (chest)','Pull-up (back)','Overhead press (shoulders)','Squat (legs)'],
+      'Legs': ['Bench press (chest)','Pull-up (back)','Overhead press (shoulders)','Barbell curl (arms)']
+    };
+
+    const muscleGuideData = {
+      'Shoulders': [
+        { name: 'Front delt', ex: 'Overhead press, Arnold press, front raise' },
+        { name: 'Side delt', ex: 'Lateral raise, upright row, push press' },
+        { name: 'Rear delt', ex: 'Face pull, reverse flye, band pull-apart' }
+      ],
+      'Chest': [
+        { name: 'Upper pec', ex: 'Incline bench (30-45°), incline flye, guillotine press' },
+        { name: 'Mid pec', ex: 'Flat bench, dip (lean forward), flat flye' },
+        { name: 'Lower pec', ex: 'Decline press, dip (upright), pullover' }
+      ],
+      'Back': [
+        { name: 'Lats', ex: 'Pull-up, lat pulldown, straight-arm pulldown' },
+        { name: 'Traps (upper)', ex: 'Shrug, farmer carry' },
+        { name: 'Traps (mid)', ex: 'Chest-supported row, face pull' },
+        { name: 'Traps (lower)', ex: 'Y-raise, prone trap raise' },
+        { name: 'Rhomboids', ex: 'Face pull, chest-supported row' },
+        { name: 'Erectors', ex: 'Deadlift, RDL, back extension' }
+      ],
+      'Biceps': [
+        { name: 'Long head (peak)', ex: 'Incline curl, drag curl, narrow curl' },
+        { name: 'Short head (mass)', ex: 'Preacher curl, spider curl, wide curl' },
+        { name: 'Brachialis', ex: 'Hammer curl, cross-body curl' }
+      ],
+      'Triceps': [
+        { name: 'Long head', ex: 'Overhead extension, skullcrusher, close-grip bench' },
+        { name: 'Lateral head', ex: 'Cable pushdown, bench dip' },
+        { name: 'Medial head', ex: 'Close-grip bench, diamond push-up' }
+      ],
+      'Quads': [
+        { name: 'Rectus femoris', ex: 'Leg extension, squat, sissy squat' },
+        { name: 'Vastus lateralis', ex: 'Leg press, squat, hack squat' },
+        { name: 'Vastus medialis', ex: 'Leg extension (top 30°), narrow squat' }
+      ],
+      'Hamstrings': [
+        { name: 'Biceps femoris (long)', ex: 'RDL, leg curl, glute-ham raise' },
+        { name: 'Biceps femoris (short)', ex: 'Seated leg curl, lying leg curl' },
+        { name: 'Semitendinosus', ex: 'RDL, Nordic curl' },
+        { name: 'Semimembranosus', ex: 'Sumo RDL, wide leg curl' }
+      ],
+      'Glutes': [
+        { name: 'Glute max', ex: 'Hip thrust, deadlift, squat, step-up' },
+        { name: 'Glute medius', ex: 'Abduction machine, lateral band walk' },
+        { name: 'Glute minimus', ex: 'Same as medius — abduction work' }
+      ],
+      'Calves': [
+        { name: 'Gastrocnemius', ex: 'Standing calf raise, jump rope' },
+        { name: 'Soleus', ex: 'Seated calf raise, squat calf raise' }
+      ],
+      'Abs': [
+        { name: 'Rectus abdominis', ex: 'Crunch, leg raise, ab wheel' },
+        { name: 'Obliques', ex: 'Side plank, Russian twist, woodchopper' },
+        { name: 'Transverse abdominis', ex: 'Plank, dead bug, Pallof press' }
+      ]
+    };
+
+    const DB_KEY = 'focusTracker_v3';
+
+    function createDefaultState(focus) {
+      const data = exerciseData[focus];
+      const parts = data.parts.map(p => ({
+        name: p.name,
+        target: p.target,
+        exercises: p.exercises.map(e => ({ name: e, sets: 0, done: false }))
+      }));
+      const maint = {};
+      maintenanceMap[focus].forEach(ex => maint[ex] = false);
+      return { focus, parts, maintenance: maint, openGuide: [] };
+    }
+
+    let state = createDefaultState('Shoulders');
+
+    function saveToDB() {
+      try {
+        const serializable = { ...state, openGuide: Array.from(state.openGuide) };
+        localStorage.setItem(DB_KEY, JSON.stringify(serializable));
+      } catch (e) { console.log('Auto-save blocked'); }
+    }
+
+    function loadFromDB() {
+      try {
+        const saved = localStorage.getItem(DB_KEY);
+        if (!saved) return false;
+        const parsed = JSON.parse(saved);
+        if (!parsed.focus || !exerciseData[parsed.focus]) return false;
+        const expectedMaint = maintenanceMap[parsed.focus];
+        const savedMaintKeys = Object.keys(parsed.maintenance || {});
+        if (!expectedMaint.every(k => savedMaintKeys.includes(k))) return false;
+        state = parsed;
+        state.openGuide = new Set(state.openGuide || []);
+        document.getElementById('focusSelect').value = state.focus;
+        return true;
+      } catch (e) { return false; }
+    }
+
+    function changeFocus() {
+      const focus = document.getElementById('focusSelect').value;
+      state = createDefaultState(focus);
+      render();
+    }
+
+    function addSet(pIdx, eIdx) { state.parts[pIdx].exercises[eIdx].sets++; render(); }
+    function subSet(pIdx, eIdx) { if (state.parts[pIdx].exercises[eIdx].sets > 0) { state.parts[pIdx].exercises[eIdx].sets--; render(); } }
+    function toggleDone(pIdx, eIdx) { state.parts[pIdx].exercises[eIdx].done = !state.parts[pIdx].exercises[eIdx].done; render(); }
+    function toggleMaint(ex) { state.maintenance[ex] = !state.maintenance[ex]; render(); }
+
+    function resetWeek() {
+      if (!confirm('Reset all progress for this week?')) return;
+      state = createDefaultState(state.focus);
+      render();
+    }
+
+    function toggleMuscle(m) {
+      if (state.openGuide.has(m)) state.openGuide.delete(m);
+      else state.openGuide.add(m);
+      render();
+    }
+
+    function render() {
+      const data = exerciseData[state.focus];
+      let totalSets = 0;
+      state.parts.forEach(p => p.exercises.forEach(e => totalSets += e.sets));
+
+      const focusPct = Math.min(totalSets / data.target * 100, 100);
+      document.getElementById('focusSummary').innerHTML = `
+        <div class="wk-summary-row"><span class="wk-summary-name">Target</span><span class="wk-summary-val">${data.target} sets/week</span></div>
+        <div class="wk-summary-row"><span class="wk-summary-name">Logged</span><span class="wk-summary-val">${totalSets} sets</span></div>
+        <div class="wk-total-bar"><div class="wk-total-fill" style="width:${focusPct}%;background:${focusPct>=100?'var(--positive)':'var(--accent)'};"></div></div>`;
+
+      document.getElementById('focusStatus').textContent = totalSets >= data.target ? 'Target hit' : 'In progress';
+      document.getElementById('focusStatus').className = 'badge ' + (totalSets >= data.target ? 'badge-hit' : 'badge-low');
+
+      let focusHtml = '';
+      state.parts.forEach((part, pIdx) => {
+        let partSets = 0;
+        part.exercises.forEach(e => partSets += e.sets);
+        const partPct = Math.min(partSets / part.target * 100, 100);
+        const partColor = partPct >= 100 ? 'var(--positive)' : 'var(--accent)';
+        focusHtml += `<div class="wk-subgroup">
+          <div class="wk-subtitle">${part.name}<div style="flex:1"></div><span style="font-size:12px;color:var(--text-tertiary);">${partSets}/${part.target}</span><div class="wk-progress" style="margin-left:8px;"><div class="wk-progress-fill" style="width:${partPct}%;background:${partColor};"></div></div></div>`;
+        part.exercises.forEach((ex, eIdx) => {
+          focusHtml += `<div class="wk-ex-row"><div class="wk-row-left"><div class="wk-check ${ex.done ? 'done' : ''}" onclick="toggleDone(${pIdx},${eIdx})"></div><div><div class="wk-ex-name">${ex.name}</div><div class="wk-ex-meta">${ex.sets} sets logged</div></div></div><div class="wk-counter"><div class="wk-counter-btn" onclick="subSet(${pIdx},${eIdx})">−</div><div class="wk-counter-val">${ex.sets}</div><div class="wk-counter-btn" onclick="addSet(${pIdx},${eIdx})">+</div></div></div>`;
+        });
+        focusHtml += `</div>`;
+      });
+      document.getElementById('focusExercises').innerHTML = focusHtml;
+
+      let maintHtml = '';
+      Object.keys(state.maintenance).forEach(ex => {
+        const done = state.maintenance[ex];
+        maintHtml += `<div class="wk-maint-row ${done ? 'done' : ''}"><span class="wk-maint-name ${done ? 'done' : ''}">${ex}</span><button class="small-btn ${done ? 'active' : ''}" onclick="toggleMaint('${ex}')">${done ? '✓ Done' : 'Log 4 sets'}</button></div>`;
+      });
+      document.getElementById('maintenanceExercises').innerHTML = maintHtml;
+
+      let summaryHtml = '';
+      state.parts.forEach(part => {
+        let partSets = 0;
+        part.exercises.forEach(e => partSets += e.sets);
+        const color = partSets >= part.target ? 'var(--positive)' : 'var(--text-tertiary)';
+        summaryHtml += `<div class="wk-summary-row"><span class="wk-summary-name">${part.name}</span><span class="wk-summary-val" style="color:${color}">${partSets} / ${part.target}</span></div>`;
+      });
+      let maintTotal = 0;
+      Object.values(state.maintenance).forEach(v => { if (v) maintTotal += 4; });
+      summaryHtml += `<div class="wk-summary-row" style="margin-top:8px;padding-top:8px;border-top:1px solid var(--border);"><span class="wk-summary-name">Maintenance total</span><span class="wk-summary-val">${maintTotal} sets</span></div><div class="wk-summary-row"><span class="wk-summary-name">Focus total</span><span class="wk-summary-val" style="color:${totalSets>=data.target?'var(--positive)':'var(--text-primary)'}">${totalSets} sets</span></div>`;
+      document.getElementById('weeklySummary').innerHTML = summaryHtml;
+
+      const totalBarPct = Math.min(totalSets / data.target * 100, 100);
+      document.getElementById('totalBar').style.width = totalBarPct + '%';
+      document.getElementById('totalBar').style.background = totalBarPct >= 100 ? 'var(--positive)' : 'var(--accent)';
+
+      let mgHtml = '';
+      Object.keys(muscleGuideData).forEach(m => {
+        const isOpen = state.openGuide.has(m);
+        const subs = muscleGuideData[m];
+        let subHtml = '';
+        subs.forEach(s => { const tags = s.ex.split(', ').map(e => `<span class="mg-tag">${e}</span>`).join(''); subHtml += `<div class="mg-sub"><div class="mg-sub-name">${s.name}</div><div class="mg-sub-ex">${tags}</div></div>`; });
+        mgHtml += `<div class="mg-item ${isOpen ? 'open' : ''}" onclick="toggleMuscle('${m}')"><div class="mg-header"><span class="mg-name">${m}</span><span class="mg-arrow">▶</span></div><div class="mg-body"><div class="mg-content">${subHtml}</div></div></div>`;
+      });
+      document.getElementById('muscleGuide').innerHTML = mgHtml;
+
+      saveToDB();
+    }
+
+    loadFromDB();
+    render();
+  </script>
+</body>
+</html>
